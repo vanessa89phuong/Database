@@ -1,0 +1,106 @@
+with 
+yeaD as (select v.legnum, v.vdate, count(s.sname)as countDYea 
+         from votes v left join senators s on 
+              s.sname = v.sname and v.howvoted = 'Yea' and s.party = 'Democrat' 
+         group by (legnum,vdate)), 
+yeaR as (select v.legnum, v.vdate,count(s.sname) as countRYea 
+         from votes v left join senators s on 
+              s.sname = v.sname and v.howvoted = 'Yea' and s.party = 'Republican' 
+         group by (legnum,vdate)), 
+nayD as (select v.legnum, v.vdate,count(s.sname) as countDNay 
+         from votes v left join senators s on 
+              s.sname = v.sname and v.howvoted = 'Nay' and s.party = 'Democrat' 
+         group by (legnum,vdate)), 
+nayR as (select v.legnum, v.vdate,count(s.sname) countRNay 
+         from votes v left join senators s on 
+              s.sname = v.sname and v.howvoted = 'Nay' and s.party = 'Republican' 
+         group by (legnum,vdate)), 
+w as (select y.countDYea, n.countDNay,y.legnum,y.vdate,
+       (case 
+            when y.countDYea > n.countDNay then 'Yea' 
+            when y.countDYea < n.countDNay then 'Nay' 
+            else 'Even'	 
+            end) as chooseD 
+       from yeaD y join nayD n on y.legnum = n.legnum and y.vdate = n.vdate), 
+x as (select y.countDYea, n.countDNay,y.legnum,y.vdate,
+      (case
+         when y.countDYea = n.countDNay then 0.50
+         else 
+            case 
+              when y.countDYea <> n.countDNay 
+              then 
+                 case 
+                    when y.countDYea > n.countDNay 
+                    then cast(y.countDYea as real) / cast (y.countDYea + n.countDNay as real) 
+                    else cast(n.countDNay as real) /cast (y.countDYea + n.countDNay as real)
+		     end 
+		  end
+		end) as fracD 
+	from yeaD y join nayD n on y.legnum = n.legnum and y.vdate = n.vdate), 
+y as (select y.countRYea, n.countRNay,y.legnum,y.vdate,
+	(case 
+	  when y.countRYea > n.countRNay then 'Yea'
+	  when y.countRYea < n.countRNay then 'Nay'
+	  else 'Even'	
+	  end) as chooseR
+       from yeaR y join nayR n on y.legnum = n.legnum and y.vdate = n.vdate
+      ),
+z as ( select y.countRYea, n.countRNay,y.legnum,y.vdate,
+	(case 
+	when y.countRYea = n.countRNay then 0.500
+	else 
+	  case 
+	   when y.countRYea <> n.countRNay 
+	     then
+		case 
+		  when y.countRYea > n.countRNay
+		    then cast(y.countRYea as real) / cast (y.countRYea + n.countRNay as real)
+		    else cast(n.countRNay as real) /cast (y.countRYea + n.countRNay as real)
+		    end 
+              end
+             end) as fracR
+	from yeaR y join nayR n on y.legnum = n.legnum and y.vdate = n.vdate),
+partisian as (select w.chooseD, y.chooseR, x.fracD,z.fracR,w.vdate,w.legnum,
+             (case 
+                when w.chooseD <> 'Even' and y.chooseR <> 'Even' 
+                     and w.chooseD <>y.chooseR and x.fracD >= 0.6 and z.fracR >= 0.6 
+                then 't' 
+                else 'f' end) as part 
+             from w, x,y,z 
+             where w.legnum = x.legnum and w.vdate = x.vdate 
+                   and w.legnum = z.legnum and w.vdate = z.vdate and w.legnum = y.legnum and w.vdate = y.vdate) 
+select w.legnum,w.vdate,w.chooseD,x.fracD,y.chooseR,z.fracR,partisian.part 
+from w, x,y,z,partisian 
+where w.legnum = x.legnum and w.vdate = x.vdate 
+     and w.legnum = z.legnum and w.vdate = z.vdate and w.legnum = y.legnum and w.vdate = y.vdate 
+     and w.vdate = partisian.vdate and w.legnum = partisian.legnum 
+order by legnum, vdate;
+
+
+
+ legnum |   vdate    | choosed |  fracd   | chooser |  fracr   | part 
+--------+------------+---------+----------+---------+----------+------
+   1234 | 1993-10-11 | Yea     | 0.586207 | Yea     |      0.6 | f
+   1235 | 1994-03-22 | Yea     | 0.612903 | Yea     | 0.714286 | f
+   1236 | 1994-03-24 | Yea     | 0.870968 | Yea     |  0.52381 | f
+   1237 | 1994-05-02 | Yea     | 0.645161 | Yea     | 0.714286 | f
+   1238 | 1994-05-02 | Yea     | 0.548387 | Yea     | 0.952381 | f
+   1239 | 1994-05-05 | Yea     | 0.677419 | Yea     | 0.619048 | f
+   1240 | 1994-03-01 | Yea     |  0.96875 | Yea     |        1 | f
+   1240 | 1994-06-07 | Yea     | 0.774194 | Yea     | 0.714286 | f
+   1241 | 1993-06-09 | Yea     | 0.733333 | Yea     |      0.8 | f
+   1242 | 1993-09-27 | Yea     | 0.689655 | Yea     | 0.904762 | f
+   1243 | 1993-06-01 | Yea     | 0.666667 | Yea     |        1 | f
+   1243 | 1993-10-01 | Yea     |        1 | Yea     |        1 | f
+………
+  1245 | 1994-03-01 | Even    |      0.5 | Even    |      0.5 | f
+   1245 | 1994-03-02 | Nay     |  0.96875 | Nay     |        1 | f
+   1245 | 1994-03-03 | Yea     |        1 | Yea     |        1 | f
+   1245 | 1994-03-04 | Yea     |        1 | Nay     |        1 | t
+   1245 | 1994-03-05 | Yea     |        1 | Nay     |        1 | t
+   1245 | 1994-03-10 | Yea     |        1 | Yea     |        1 | f
+   1246 | 1998-10-10 | Yea     |        1 | Yea     |        1 | f
+   1247 | 1997-11-12 | Nay     |    0.875 | Nay     | 0.727273 | f
+   1248 | 1995-06-08 | Yea     |   0.9375 | Yea     | 0.909091 | f
+(24 rows)
+

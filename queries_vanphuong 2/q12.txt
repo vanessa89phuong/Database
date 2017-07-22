@@ -1,0 +1,30 @@
+with 
+t1 as (select c.sname, min(cdate) as firstCon 
+       from contributes c 
+       group by c.sname), 
+t2 as(select s.sname, min(vdate) as firstVot 
+      from senators s left join votes v on s.sname = v.sname 
+      group by s.sname) 
+select x.sname,x.firstCon,coalesce(Cast(y.firstVot as varchar),'Never voted') 
+from t2 y join t1 x on x.sname = y.sname 
+where y.firstVot is null or x.firstCon < y.firstVot 
+group by x.firstCon,y.firstVot,x.sname 
+order by x.sname
+
+   sname    |  firstcon  |  coalesce   
+------------+------------+-------------
+ Biden      | 1990-05-24 | 1993-06-09
+ Cohen      | 1990-05-19 | 1993-06-01
+ DeConcini  | 1991-02-13 | 1993-06-09
+ Gorton     | 1991-10-01 | 1995-06-08
+ Heflin     | 1988-05-19 | 1993-06-01
+ Helms      | 1993-12-25 | 1994-03-01
+ Hutchinson | 1998-01-07 | Never voted
+ Lott       | 1991-09-10 | 1993-06-01
+ Mack       | 1991-07-19 | 1993-06-09
+ McCain     | 1991-04-28 | 1993-06-09
+ Mitchell   | 1988-05-19 | 1993-06-01
+ Murkowski  | 1990-03-17 | 1993-06-09
+ Shelby     | 1988-01-08 | 1993-06-09
+ Stevens    | 1988-08-17 | 1993-06-09
+(14 rows)

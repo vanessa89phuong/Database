@@ -1,0 +1,53 @@
+with 
+minYear as(select EXTRACT(YEAR FROM min(vdate))as firstYear 
+           from votes), 
+maxYear as(select EXTRACT(YEAR FROM max(vdate))as lastYear 
+           from votes), 
+countFirst as(select senators.sname,count(howvoted)as minVote 
+               from senators left join votes on senators.sname = votes.sname 
+                   and extract(year from (votes.vdate)) = (select firstYear from minYear) 
+               group by senators.sname 
+               order by senators.sname), 
+countLast as(select senators.sname,count(howvoted)as maxVote 
+             from senators left join votes on senators.sname = votes.sname 
+                  and extract(year from (votes.vdate)) = (select lastYear from maxYear) 
+             group by senators.sname 
+             order by senators.sname)
+select countFirst.sname, countFirst.minVote,countLast.maxVote 
+from countFirst join countLast on countFirst.sname = countLast.sname 
+order by countFirst.sname;
+
+     sname     | minvote | maxvote 
+---------------+---------+---------
+ Akaka         |       3 |       1
+ Biden         |       3 |       1
+ Bond          |       3 |       1
+ Breaux        |       3 |       1
+ Brown         |       3 |       1
+ Bumpers       |       4 |       1
+ Byrd          |       3 |       1
+ Coats         |       3 |       1
+ Cochran       |       3 |       1
+ Cohen         |       5 |       1
+ Craig         |       3 |       1
+ Cranston      |       3 |       1
+ Danforth      |       3 |       1
+ DeConcini     |       3 |       1
+ Dodd          |       3 |       1
+ Dole          |       3 |       1
+………..
+ Nunn          |       3 |       1
+ Pryor         |       7 |       1
+ Riegle        |       3 |       1
+ Roth          |       3 |       1
+ Sarbanes      |       3 |       1
+ Shelby        |       3 |       1
+ Simon         |       3 |       1
+ Simpson       |       3 |       1
+ Stevens       |       3 |       1
+ Symms         |       3 |       1
+ Webster       |       0 |       0
+ Wellstone     |       3 |       1
+ Wirth         |       3 |       1
+(56 rows)
+

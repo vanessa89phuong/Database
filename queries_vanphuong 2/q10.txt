@@ -1,0 +1,65 @@
+select c1.cname, c2.cname,a.howafctd,b.howfctd
+from corporations c1 join corporations c2 
+     on c1.cname < c2.cname
+where not exists(select l.legnum 
+                 from legislation l 
+                 where not exists(select a.legnum,a.howafctd,b.howafctd 
+                                  from affected_by a join affected_by b 
+                                     on a.legnum = b.legnum and a.howafctd = b.howafctd 
+                                  where a.legnum = l.legnum and a.cname = c1.cname and b.cname = c2.cname) 
+                                   and exists (select e.legnum,e.howafctd 
+						from affected_by e 
+                                              where e.legnum = l.legnum and (e.cname = c1.cname or e.cname = c2.cname
+                                              )
+                                   )
+                    ) 
+order by c2.cname,c1.cname;       
+
+
+
+
+
+cname              |             cname              
+--------------------------------+--------------------------------
+ Anchorage Igloos               | Avalanche Tours
+ Anchorage Igloos               | Bayou Development
+ Anchorage Igloos               | Big Swamp Realty
+ Anchorage Igloos               | Bilo Selhi Financial
+ Anchorage Igloos               | Blammo Toys, Inc.
+ Anchorage Igloos               | Blo Naway Developers
+ Anchorage Igloos               | Cactus Needle Co.
+ Anchorage Igloos               | Cogswell Cogs
+ Anchorage Igloos               | Crashalot Air
+ Anchorage Igloos               | Crawdads R Us
+ Anchorage Igloos               | Da Bulls Novelty Co.
+ Anchorage Igloos               | Dewey, Cheatem, & Howe
+ Anchorage Igloos               | Downeast Outfitters
+ Anchorage Igloos               | Hiccup Liquors
+ Anchorage Igloos               | Howard, Fine, &Howard
+ Anchorage Igloos               | Husky Corn Co.
+ Anchorage Igloos               | Levy Associates, Inc.
+ Anchorage Igloos               | Mucho Smello Perfumes
+ Anchorage Igloos               | Nev Erpay Insurance
+ Anchorage Igloos               | Northeast Burro Transport
+……
+ Rockemwell Aerospace           | Spacely Sprockets
+ Rockemwell Aerospace           | Stinkemup Plastics
+ Rockemwell Aerospace           | Stumpys Gator Farm
+ Rockemwell Aerospace           | Toto Pet Supply
+ Rockemwell Aerospace           | Wee Burnem Oil Fields
+ Simply SiliconBoards & Implant | Spacely Sprockets
+ Simply SiliconBoards & Implant | Stinkemup Plastics
+ Simply SiliconBoards & Implant | Stumpys Gator Farm
+ Simply SiliconBoards & Implant | Toto Pet Supply
+ Simply SiliconBoards & Implant | Wee Burnem Oil Fields
+ Spacely Sprockets              | Stinkemup Plastics
+ Spacely Sprockets              | Stumpys Gator Farm
+ Spacely Sprockets              | Toto Pet Supply
+ Spacely Sprockets              | Wee Burnem Oil Fields
+ Stinkemup Plastics             | Stumpys Gator Farm
+ Stinkemup Plastics             | Toto Pet Supply
+ Stinkemup Plastics             | Wee Burnem Oil Fields
+ Stumpys Gator Farm             | Toto Pet Supply
+ Stumpys Gator Farm             | Wee Burnem Oil Fields
+ Toto Pet Supply                | Wee Burnem Oil Fields
+(408 rows)

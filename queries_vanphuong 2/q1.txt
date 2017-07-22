@@ -1,0 +1,12 @@
+Select distinct sname, age, stname 
+From senators 
+Where party = 'Democrat' and age < 50 and gender ='Female'
+      and (stname like 'A%' or stname like 'I%' or stname like 'M%') 
+Order by sname;
+
+VanPhuong-# Order by sname;
+     sname     | age | stname 
+---------------+-----+--------
+ Mikulski      |  49 | MD
+ Moseley-Braun |  47 | IL
+(2 rows)

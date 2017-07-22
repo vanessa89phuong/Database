@@ -1,0 +1,31 @@
+with 
+t1 as (select distinct v.sname,a.howafctd,v.vdate,a.cname 
+       from votes v, affected_by a 
+       where v.howvoted = 'Nay' 
+         and a.howafctd = 'Unfavorably' and v.legnum = a.legnum), 
+t2 as (select distinct v.sname,a.howafctd,v.vdate,a.cname 
+        from votes v, affected_by a 
+        where v.howvoted = 'Yea' 
+          and a.howafctd = 'Favorably' and v.legnum = a.legnum), 
+t3 as (select c.sname,d.cname,c.cdate 
+        from contributes c, corporations d 
+        where d.cname = c.cname) 
+select s.sname 
+from senators s 
+where not exists(select t.sname,t.cname,t.cdate 
+                 from t3 t 
+                 where s.sname = t.sname 
+                      and not exists(select f.sname,f.vdate,f.cname 
+                                     from t2 f 
+                                     where s.sname = f.sname and f.vdate > t.cdate and f.cname = t.cname) 
+                                          and not exists (select u.sname,u.vdate,u.cname 
+                                                          from t1 u 
+                                                          where s.sname = u.sname and u.vdate > t.cdate and u.cname = t.cname));
+		
+		
+
+  sname  
+---------
+ Stevens
+ Webster
+(2 rows)

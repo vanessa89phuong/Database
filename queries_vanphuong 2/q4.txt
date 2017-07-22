@@ -1,0 +1,39 @@
+with 
+t1 as (select distinct x.legnum, count(x.howafctd), avg(y.totrev) 
+       from affected_by x left join corporations y 
+         on x.cname = y.cname 
+       where x.howafctd ='Unfavorably'
+       group by x.legnum 
+       order by x.legnum),
+t2 as (select distinct x.legnum,count(x.howafctd),avg(y.totrev) 
+       from affected_by x left join corporations y 
+         on x.cname = y.cname 
+       where x.howafctd = 'Favorably' 
+       group by x.legnum 
+       order by x.legnum) 
+select distinct z.legnum as legnum,coalesce(x.count,0) as unfavoCount,
+               coalesce(cast((x.avg) as varchar),'n/a') as unfavoAvg,
+               coalesce(y.count,0) as favorCount,coalesce(cast((y.avg) as varchar),'n/a') as favorAvg 
+from legislation z left join t1 x  on z.legnum = x.legnum 
+                   left join t2 y on z.legnum = y.legnum 
+order by z.legnum;
+
+
+legnum | unfavocount |      unfavoavg       | favorcount |       favoravg         
+--------+-------------+----------------------+------------+-----------------------
+   1234 |           1 | 2147483647.00000000  |          1 | 1254686.000000000000
+   1235 |           0 | n/a                  |          1 | 3259833.000000000000
+   1236 |           0 | n/a                  |          3 | 147905343.66666667
+   1237 |           0 | n/a                  |          1 | 4234572.000000000000
+   1238 |           2 | 1644007.000000000000 |          0 | n/a
+   1239 |           1 | 756744968.00000000   |          2 | 27117286.000000000000
+   1240 |           2 | 1116797.500000000000 |          0 | n/a
+   1241 |           0 | n/a                  |          1 | 234234446.00000000
+   1242 |           1 | 90873.000000000000   |          2 | 28243966.000000000000
+   1243 |           0 | n/a                  |          0 | n/a
+   1244 |           0 | n/a                  |          0 | n/a
+   1245 |           0 | n/a                  |          0 | n/a
+   1246 |           0 | n/a                  |         43 | 154140659.81395349
+   1247 |           0 | n/a                  |          1 | 50000000.000000000000
+   1248 |           1 | 400000000.00000000   |          0 | n/a
+(15 rows)

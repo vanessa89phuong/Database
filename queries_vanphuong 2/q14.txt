@@ -1,0 +1,69 @@
+with 
+repub as (select s.stname, count(se.party)as repubican 
+          from states s
+             left join senators se on s.stname = se.stname 
+                  and se.party = 'Republican' 
+          group by s.stname 
+          order by s.stname), 
+demo as( select s.stname, count(se.party)as democrat
+         from states s 
+           left join senators se on s.stname = se.stname 
+                and se.party ='Democrat' 
+         group by s.stname 
+         order by s.stname),
+fem as (select s.stname, count(se.gender)as female 
+        from states s 
+            left join senators se on s.stname = se.stname 
+                 and se.gender = 'Female'
+        group by s.stname
+        order by s.stname),
+mal as (select s.stname, count(se.gender)as male 
+        from states s 
+             left join senators se on s.stname = se.stname 
+                  and se.gender = 'Male' 
+        group by s.stname 
+        order by s.stname),
+corporation as (select s.stname,count(c.cname)as corp ,sum(c.totrev)as totov 
+                from states s 
+                     left join corporations c on s.stname = c.stname 
+                group by s.stname 
+                order by s.stname)
+
+select st.stname,repub.repubican,demo.democrat,fem.female,mal.male,corporation.corp,coalesce (corporation.totov,0)
+from states st join fem on st.stname = fem.stname
+    join demo on st.stname = demo.stname
+    join repub on st.stname = repub.stname
+    join corporation on st.stname = corporation.stname
+    join mal on st.stname = mal.stname
+order by st.stname;
+
+
+stname | repubican | democrat | female | male | corp |  coalesce  
+--------+-----------+----------+--------+------+------+------------
+ AK     |         2 |        0 |      0 |    2 |    2 |   59256702
+ AL     |         0 |        2 |      0 |    2 |    3 |  407253458
+ AR     |         0 |        2 |      0 |    2 |    2 | 2181707390
+ AZ     |         1 |        1 |      0 |    2 |    2 |  358053702
+ CA     |         0 |        2 |      1 |    1 |    3 | 2220627068
+ CO     |         1 |        1 |      0 |    2 |    2 |   38468802
+ CT     |         0 |        2 |      0 |    2 |    2 |   25768025
+ DE     |         1 |        1 |      0 |    2 |    2 |   32880243
+ FL     |         1 |        1 |      0 |    2 |    2 |     522523
+ GA     |         0 |        2 |      0 |    2 |    2 |  234269002
+ HI     |         0 |        2 |      0 |    2 |    2 |    5489258
+ IA     |         1 |        1 |      0 |    2 |    2 |     259087
+ ID     |         2 |        0 |      0 |    2 |    2 |   35213592
+ IL     |         0 |        2 |      1 |    1 |    2 |   30479028
+ IN     |         2 |        0 |      0 |    2 |    2 |      35034
+ KS     |         2 |        0 |      1 |    1 |    2 |  756983941
+ KY     |         1 |        1 |      0 |    2 |    2 |    9747765
+ LA     |         0 |        2 |      0 |    2 |    2 | 
+……..
+ MO     |         2 |        0 |      0 |    2 |    0 |          0
+ MS     |         2 |        0 |      0 |    2 |    0 |          0
+ NC     |         0 |        1 |      0 |    1 |    0 |          0
+ TX     |         1 |        1 |      2 |    0 |    0 |          0
+ WA     |         1 |        0 |      0 |    1 |    0 |          0
+ WV     |         0 |        1 |      0 |    1 |    0 |          0
+ WY     |         1 |        0 |      0 |    1 |    0 |          0
+(30 rows)

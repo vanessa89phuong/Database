@@ -1,0 +1,32 @@
+select distinct s.sname,v.legnum,v.howvoted,v.vdate
+from sponsors s join votes v 
+     on s.legnum = v.legnum and s.sname = v.sname 
+        and v.howvoted = 'Nay' 
+order by s.sname,v.legnum,v.vdate;
+
+     sname     | legnum | howvoted |   vdate    
+---------------+--------+----------+------------
+ Biden         |   1238 | Nay      | 1994-05-02
+ Breaux        |   1240 | Nay      | 1994-06-07
+ Brown         |   1236 | Nay      | 1994-03-24
+ Coats         |   1236 | Nay      | 1994-03-24
+ Cochran       |   1236 | Nay      | 1994-03-24
+ Ford          |   1237 | Nay      | 1994-05-02
+ Fowler        |   1237 | Nay      | 1994-05-02
+ Harkin        |   1237 | Nay      | 1994-05-02
+ Inouye        |   1237 | Nay      | 1994-05-02
+ Kassebaum     |   1234 | Nay      | 1993-10-11
+ Kassebaum     |   1236 | Nay      | 1994-03-24
+ Kerry         |   1237 | Nay      | 1994-05-02
+…..
+ Murkowski     |   1240 | Nay      | 1994-06-07
+ Nunn          |   1235 | Nay      | 1994-03-22
+ Roth          |   1236 | Nay      | 1994-03-24
+ Shelby        |   1237 | Nay      | 1994-05-02
+ Simon         |   1237 | Nay      | 1994-05-02
+ Stevens       |   1236 | Nay      | 1994-03-24
+ Stevens       |   1239 | Nay      | 1994-05-05
+ Symms         |   1236 | Nay      | 1994-03-24
+ Wirth         |   1237 | Nay      | 1994-05-02
+(29 rows)
+

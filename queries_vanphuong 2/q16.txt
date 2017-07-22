@@ -1,0 +1,39 @@
+select distinct c.cname,coalesce(cast(count(co.cname) as varchar),'n/a') as contri, 
+          (max(co.cdate)-min(co.cdate))+1 as timeInt,
+          cast(count(co.cname) as real)/((max(co.cdate)-min(co.cdate))+1)  as quotient 
+from corporations c join contributes co on c.cname = co.cname 
+group by c.cname 
+order by c.cname;
+
+             cname              | contri | timeint |       quotient       
+--------------------------------+--------+---------+----------------------
+ Acme Mountain Gear             | 11     |    3124 |  0.00352112676056338
+ Anchorage Igloos               | 5      |    3124 |  0.00160051216389245
+ Avalanche Tours                | 5      |    3124 |  0.00160051216389245
+ Bama Pork Rinds                | 6      |    3124 |  0.00192061459667093
+ Bayou Development              | 4      |    3124 |  0.00128040973111396
+ Big Swamp Realty               | 5      |    3124 |  0.00160051216389245
+ Bilo Selhi Financial           | 5      |    3124 |  0.00160051216389245
+ Blammo Toys, Inc.              | 5      |    3124 |  0.00160051216389245
+ Blo Naway Developers           | 4      |    3124 |  0.00128040973111396
+ Boise Fertilizer, Inc.         | 5      |    3124 |  0.00160051216389245
+ Cactus Needle Co.              | 5      |    3124 |  0.00160051216389245
+ Cogswell Cogs                  | 12     |    3214 |  0.00373366521468575
+ Crashalot Air                  | 5      |    3124 |  0.00160051216389245
+ Crawdads R Us                  | 5      |    3124 |  0.00160051216389245
+ Da Bulls Novelty Co.           | 5      |    3124 |  0.00160051216389245
+………
+ Random Number Generators       | 25     |    2312 |   0.0108131487889273
+ Rinky Dink Inc.                | 55     |    3124 |   0.0176056338028169
+ Rockemwell Aerospace           | 5      |    3124 |  0.00160051216389245
+ Simply SiliconBoards & Implant | 4      |    3124 |  0.00128040973111396
+ Spacely Sprockets              | 12     |    3214 |  0.00373366521468575
+ Spudlys Potato Products        | 5      |    3124 |  0.00160051216389245
+ Stinkemup Plastics             | 4      |    3124 |  0.00128040973111396
+ Stumpys Gator Farm             | 5      |    3124 |  0.00160051216389245
+ Sunny Grove Pines              | 7      |    3124 |  0.00224071702944942
+ Supro Toxics                   | 6      |    3124 |  0.00192061459667093
+ Toto Pet Supply                | 5      |    3124 |  0.00160051216389245
+ Wee Burnem Oil Fields          | 5      |    3124 |  0.00160051216389245
+(45 rows)
+

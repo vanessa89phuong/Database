@@ -1,0 +1,43 @@
+with 
+s1 as (select x.sname,z.legnum,x.party 
+       from senators x join sponsors z 
+          on x.sname = z.sname and x.party = 'Democrat'), 
+s2 as (select y.sname,z.legnum,y.party 
+       from senators y join sponsors z 
+          on y.sname = z.sname and y.party = 'Republican') 
+select x.sname, y.sname,x.legnum
+from s1 x, s2 y 
+where x.legnum = y.legnum and not(x.party = y.party) 
+order by x.legnum,x.sname,y.sname;
+
+
+     sname     |   sname   | legnum 
+---------------+-----------+--------
+ Feinstein     | Kassebaum |   1234
+ Mikulski      | Kassebaum |   1234
+ Moseley-Braun | Kassebaum |   1234
+ Sarbanes      | Kassebaum |   1234
+ Cranston      | Mack      |   1235
+ Cranston      | Symms     |   1235
+ Fowler        | Mack      |   1235
+ Fowler        | Symms     |   1235
+ Kennedy       | Mack      |   1235
+ Kennedy       | Symms     |   1235
+….
+ Cranston      | Cochran   |   1239
+ Cranston      | Dole      |   1239
+ Cranston      | Lugar     |   1239
+ Cranston      | Mack      |   1239
+ Cranston      | Stevens   |   1239
+ Heflin        | Cochran   |   1239
+ Heflin        | Dole      |   1239
+ Heflin        | Lugar     |   1239
+ Heflin        | Mack      |   1239
+ Heflin        | Stevens   |   1239
+ Helms         | Cochran   |   1239
+ Helms         | Dole      |   1239
+ Helms         | Lugar     |   1239
+ Helms         | Mack      |   1239
+ Helms         | Stevens   |   1239
+ Breaux        | Murkowski |   1240
+(30 rows)

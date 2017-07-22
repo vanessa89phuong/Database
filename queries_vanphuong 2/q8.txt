@@ -1,0 +1,16 @@
+with
+contributors as (select distinct cname 
+                 from corporations), 
+party as (select distinct party 
+          from senators) 
+select x.cname,y.party 
+from contributors x,party y 
+where not exists (select z.sname 
+                  from senators z 
+                  where z.party = y.party 
+                  and not exists (select c.sname, c.cname
+                                 from contributes c
+                                 where c.sname = z.sname and c.cname = x.cname));
+ cname | party 
+-------+-------
+(0 rows)

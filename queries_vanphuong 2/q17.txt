@@ -1,0 +1,77 @@
+with
+rollcall as(select legnum,vdate
+            from votes
+            group by(legnum,vdate)
+            ),
+v0 as (select distinct min(vdate) as mindate,legnum,vdate 
+       from rollcall
+       group by(legnum,vdate)),
+v1 as (select v.vdate as vdate,
+              (select distinct max(vdate) from rollcall
+              where vdate < v.vdate and v.legnum = legnum ) as diminus1, v.legnum 
+              from rollcall v 
+              group by (legnum,vdate) 
+              order by legnum,vdate),
+v2 as (select v1.legnum, v1.vdate,coalesce(cast(sum(c.amt) as text),'0') as countC 
+       from v1 left join contributes c 
+          on c.cdate < v1.vdate and c.cdate >= v1.diminus1 
+          group by (v1.legnum,v1.vdate)),
+v3 as (select v1.legnum, v1.vdate,coalesce(cast(sum(c.amt) as text),'0') as countC 
+       from v1 left join contributes c 
+           on c.cdate < v1.vdate
+	group by (v1.legnum,v1.vdate)),
+v4 as (select v0.legnum,v2.vdate,
+           case 
+            when v3.vdate = v0.mindate then v3.countC 
+            else v2.countC 
+            end as countC1 
+       from v0 left join v2 on v0.legnum = v2.legnum and v0.vdate = v2.vdate
+               left join v3 on v0.legnum = v3.legnum and v3.vdate = v0.vdate 
+        )
+select distinct rollcall.legnum,rollcall.vdate,coalesce (cast(v4.countC1 as text),'0') as sumCon
+from v4 left join rollcall
+     on rollcall.legnum = v4.legnum and v4.vdate =rollcall.vdate 
+order by rollcall.legnum,rollcall.vdate;
+
+
+
+
+ legnum |   vdate    | sumcon 
+--------+------------+---------
+   1234 | 1993-10-11 | 1053300
+   1235 | 1994-03-22 | 1891300
+   1236 | 1994-03-24 | 1891300
+   1237 | 1994-05-02 | 1891300
+   1238 | 1994-05-02 | 1891300
+   1239 | 1994-05-05 | 1891300
+   1240 | 1994-03-01 | 0
+   1240 | 1994-06-07 | 0
+   1240 | 1994-03-01 | 1891300
+   1240 | 1994-06-07 | 1891300
+   1241 | 1993-06-09 | 948100
+   1242 | 1993-09-27 | 1053300
+   1243 | 1993-06-01 | 0
+   1243 | 1993-10-01 | 105200
+   1243 | 1993-10-01 | 1053300
+   1243 | 1994-03-06 | 1891300
+   1243 | 1994-03-06 | 838000
+   1243 | 1993-06-01 | 948100
+   1244 | 1993-06-01 | 948100
+   1245 | 1993-08-01 | 0
+   1245 | 1994-03-02 | 0
+   1245 | 1994-03-03 | 0
+   1245 | 1994-03-04 | 0
+   1245 | 1994-03-05 | 0
+   1245 | 1994-03-10 | 0
+   1245 | 1994-03-01 | 1891300
+   1245 | 1994-03-02 | 1891300
+   1245 | 1994-03-03 | 1891300
+   1245 | 1994-03-04 | 1891300
+   1245 | 1994-03-05 | 1891300
+   1245 | 1994-03-10 | 1891300
+   1245 | 1994-03-01 | 938000
+   1245 | 1993-08-01 | 953300
+   1246 | 1998-10-10 | 1991300
+   1247 | 1997-11-12 | 1989300
+   1248 | 1995-06-08 | 1891300
+(36 rows)

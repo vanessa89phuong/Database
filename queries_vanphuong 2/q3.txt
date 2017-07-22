@@ -1,0 +1,15 @@
+with
+t1 as (select sname, cname 
+       from senators inner join corporations 
+           on senators.stname = corporations.stname and totrev > 5000000 and senators.age >'50' and senators.party = 'Republican'),
+t2 as (select sname,howafctd 
+       from opposes inner join affected_by 
+          on opposes.legnum = affected_by.legnum and howafctd ='Unfavorably') 
+select  x stname, x.cname, y.sname 
+from t1 x, t2 y 
+where x.sname = y.sname
+order by x.sname,x.cname;
+
+ stname | cname | sname 
+--------+-------+-------
+(0 rows)

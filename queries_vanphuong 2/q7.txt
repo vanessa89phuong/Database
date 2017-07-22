@@ -1,0 +1,47 @@
+select sname, count(distinct row(legnum,vdate))as roll_call,min(vdate),
+      to_char(cast(count(distinct row(legnum,vdate))as real)/cast((select count(distinct row(legnum,vdate)) 
+                                                                   from votes)as real),'0.000') 
+from votes 
+group by sname 
+having count(distinct row(legnum,vdate)) >= (select count(distinct row(legnum,vdate))as mc_roll_call
+                                            from votes
+                                            where sname = 'McCain');
+
+   sname     | roll_call |    min     | to_char 
+---------------+-----------+------------+---------
+ Akaka         |        20 | 1993-06-09 |  0.833
+ Biden         |        20 | 1993-06-09 |  0.833
+ Breaux        |        20 | 1993-06-09 |  0.833
+ Brown         |        19 | 1993-06-09 |  0.792
+ Bumpers       |        21 | 1993-06-01 |  0.875
+ Cochran       |        19 | 1993-06-09 |  0.792
+ Cohen         |        21 | 1993-06-01 |  0.875
+ Craig         |        19 | 1993-06-09 |  0.792
+ Cranston      |        20 | 1993-06-09 |  0.833
+ DeConcini     |        20 | 1993-06-09 |  0.833
+ Dodd          |        20 | 1993-06-09 |  0.833
+ Dole          |        19 | 1993-06-09 |  0.792
+ Durenberger   |        19 | 1993-06-09 |  0.792
+ Feinstein     |        20 | 1993-06-09 |  0.833
+ Ford          |        20 | 1993-06-09 |  0.833
+ Fowler        |        19 | 1993-06-09 |  0.792
+ Graham        |        20 | 1993-06-09 |  0.833
+ Grassley      |        19 | 1993-06-09 |  0.792
+………
+ Mikulski      |        21 | 1993-06-09 |  0.875
+ Mitchell      |        22 | 1993-06-01 |  0.917
+ Moseley-Braun |        20 | 1993-06-09 |  0.833
+ Murkowski     |        19 | 1993-06-09 |  0.792
+ Nunn          |        19 | 1993-06-09 |  0.792
+ Pryor         |        24 | 1993-06-01 |  1.000
+ Riegle        |        20 | 1993-06-09 |  0.833
+ Roth          |        19 | 1993-06-09 |  0.792
+ Sarbanes      |        20 | 1993-06-09 |  0.833
+ Shelby        |        20 | 1993-06-09 |  0.833
+ Simon         |        20 | 1993-06-09 |  0.833
+ Simpson       |        19 | 1993-06-09 |  0.792
+ Stevens       |        19 | 1993-06-09 |  0.792
+ Symms         |        19 | 1993-06-09 |  0.792
+ Wellstone     |        20 | 1993-06-09 |  0.833
+ Wirth         |        20 | 1993-06-09 |  0.833
+(47 rows)

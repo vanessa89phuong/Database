@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+    <head>
+        <meta charset="UTF-8">
+        <title>Entry Page</title>
+        <style>
+p.border{border-style:solid ;}
+h1{
+color: red;
+}
+br {
+  margin:2.5em 0;
+  line-height:5em;
+}
+</style>
+    </head>
+    <body>
+  <h1>  <center>Web Project</center></h1>
+        <form action="submit.jsp" method="GET">
+         <p class="border">
+            Low limit of the name range: <input type="text"
+            name="lowName" placeholder="a-z"> <br>
+            High limit of the name range: <input type="text"
+            name="highName" placeholder="a-z"> <br>
+            Low limit of the date range: <input type="date"
+            name="lowDate" placeholder="yyyy-mm-dd" onfocus="(this.type='yyyy-mm-dd')"> <br>
+            High limit of the date range: <input type="date"
+            name="highDate"placeholder="yyyy-mm-dd" onfocus="(this.type='yyyy-mm-dd')"> <br>
+            <input type="submit" name="submit" value="Submit">
+        </form>
+    </p>
+            
+    </body>
+    </html>

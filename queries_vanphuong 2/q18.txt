@@ -1,0 +1,134 @@
+with
+t1 as (select legnum,vdate,count(howvoted) as sumhow
+       from votes
+       group by (legnum,vdate)
+       order by vdate,legnum),
+t2 as(select legnum,vdate,count(howvoted) as demo_yea
+      from senators s join votes on s.sname = votes.sname
+       and s.party = 'Democrat'and howvoted = 'Yea'
+      group by(legnum,vdate)
+      order by vdate,legnum),
+t3 as(select legnum,vdate,count(howvoted) as demo_nay
+      from senators s join  votes on s.sname = votes.sname
+      where s.party = 'Democrat'and howvoted = 'Nay'
+      group by(legnum,vdate)
+      order by vdate,legnum),
+t4 as (select legnum,vdate,count(howvoted) as demo_ab
+       from senators s join votes on s.sname = votes.sname
+        and s.party = 'Democrat'and howvoted = 'Abstain'
+       group by(legnum,vdate)
+       order by vdate,legnum),
+demo as (select t1.legnum, t1.vdate,coalesce(t2.demo_yea,0)as demo_yea,
+             coalesce(t3.demo_nay,0)as demo_nay,coalesce(t4.demo_ab,0)as demo_ab
+        from t1 left join t2 on t1.legnum = t2.legnum and t1.vdate = t2.vdate
+          left join t3 on t2.legnum = t3.legnum and t2.vdate = t3.vdate
+          left join t4 on t4.legnum = t3.legnum and t4.vdate = t3.vdate
+        order by t2.vdate,t2.legnum),
+t5 as(select legnum,vdate,count(howvoted) as demo_yea
+      from senators s join votes on s.sname = votes.sname
+                   and s.party = 'Republican'and howvoted = 'Yea'
+      group by(legnum,vdate)
+      order by vdate,legnum),
+t6 as(select legnum,vdate,count(howvoted) as demo_nay
+      from senators s join votes on s.sname = votes.sname
+      where s.party = 'Republican'and howvoted = 'Nay'
+      group by(legnum,vdate)
+      order by vdate,legnum),
+t7 as (select legnum,vdate,count(howvoted) as demo_ab
+       from senators s join votes on s.sname = votes.sname
+                    and s.party = 'Republican'and howvoted = 'Abstain'
+       group by(legnum,vdate)
+       order by vdate,legnum),
+repub as (select t1.legnum, t1.vdate,coalesce(t5.demo_yea,0) as repub_yea,
+             coalesce(t6.demo_nay,0) as repub_nay,coalesce(t7.demo_ab,0) as repub_ab
+         from t1 left join t5 on t1.legnum = t5.legnum and t1.vdate = t5.vdate 
+             left join t6 on t1.legnum = t6.legnum and t1.vdate = t6.vdate
+             left join t7 on t7.legnum = t1.legnum and t7.vdate = t1.vdate
+         order by t5.vdate,t5.legnum),
+repub_vote as (select count(howvoted) as countvote,legnum,vdate
+               from votes join senators on votes.sname= senators.sname
+               where party = 'Republican'
+               group by (legnum,vdate)
+               order by vdate,legnum),
+demo_vote as (select count(howvoted) as countvote,legnum,vdate
+              from votes join senators on votes.sname= senators.sname
+              where party = 'Democrat'
+              group by (legnum,vdate)
+              order by vdate,legnum),
+t10 as (select t1.legnum, t1.vdate,coalesce(d.demo_yea,0) as demoyea,
+         coalesce(d.demo_nay,0) as demonay,coalesce (d.demo_ab,0) as demoab,
+         coalesce (r.repub_yea,0) as repubyea,coalesce (r.repub_nay,0) as repubnay ,coalesce (r.repub_ab,0) as repubab,
+         case
+           when (d.demo_yea + r.repub_yea) > (t1.sumhow/2)
+           then true
+           else
+           false
+           end as booye
+       from  t1 left join demo d  on t1.legnum = d.legnum and t1.vdate = d.vdate 
+        left join repub r on t1.legnum = r.legnum and t1.vdate = r.vdate
+       order by t1.vdate,t1.legnum),
+t11 as (select t10.legnum,t10.vdate,
+         case 
+         when (t10.booye = false and coalesce (r.repub_nay,0) >= coalesce (repub_vote.countvote,0 )/2) or 
+         (booye = true and coalesce (r.repub_yea,0) >= coalesce (repub_vote.countvote,0)/2)
+         then true
+         else
+         false
+         end as borepub
+       from t10 join repub_vote on 
+          repub_vote.legnum = t10.legnum and repub_vote.vdate = t10.vdate 
+          join repub r on t10.legnum = r.legnum and t10.vdate = r.vdate),
+t12 as (select t10.legnum, t10.vdate,
+        case 
+        when (t10.booye = false and coalesce (d.demo_nay,0) >= coalesce (demo_vote.countvote,0 )/2) or 
+        (booye = true and coalesce (d.demo_yea,0) >= coalesce (demo_vote.countvote,0)/2)
+        then true 
+        else 
+        false 
+        end as bodemo 
+        from t10 join demo_vote on 
+           demo_vote.legnum = t10.legnum and demo_vote.vdate = t10.vdate 
+           join demo d on t10.legnum = d.legnum and t10.vdate = d.vdate)
+select t1.legnum,t1.vdate,coalesce (t10.demoyea,0) as demo_yea,coalesce (t10.demonay,0) as demo_nay,
+       coalesce (t10.demoab,0) as demo_ab,coalesce (t10.repubyea,0) as repub_yea,coalesce (t10.repubnay,0) as repub_nay,
+       coalesce (t10.repubab,0) as repub_ab,t10.booye as bool_yea ,t11.borepub as bool_repub,t12.bodemo as bool_demo
+from t1 left join t10 on t10.legnum = t1.legnum and t10.vdate = t1.vdate 
+        left join t11 on t1.legnum = t11.legnum and t1.vdate = t11.vdate 
+        left join t12 on t1.legnum = t12.legnum and t1.vdate = t12.vdate 
+order by t1.legnum,t1.vdate;
+
+
+
+
+
+
+
+ legnum |   vdate    | demo_yea | demo_nay | demo_ab | repub_yea | repub_nay | repub_ab | bool_yea | bool_repub | bool_demo 
+--------+------------+----------+----------+---------+-----------+-----------+----------+----------+------------+-----------
+   1234 | 1993-10-11 |       17 |       12 |       2 |        12 |         8 |        1 | t        | t          | t
+   1235 | 1994-03-22 |       19 |       12 |       0 |        15 |         6 |        0 | t        | t          | t
+   1236 | 1994-03-24 |       27 |        4 |       0 |        11 |        10 |        0 | t        | t          | t
+   1237 | 1994-05-02 |       20 |       11 |       0 |        15 |         6 |        0 | t        | t          | t
+   1238 | 1994-05-02 |       17 |       14 |       0 |        20 |         1 |        0 | t        | t          | t
+   1239 | 1994-05-05 |       21 |       10 |       0 |        13 |         8 |        0 | t        | t          | t
+   1240 | 1994-03-01 |       31 |        1 |       0 |        21 |         0 |        0 | t        | t          | t
+   1240 | 1994-06-07 |       24 |        7 |       0 |        15 |         6 |        0 | t        | t          | t
+   1241 | 1993-06-09 |       22 |        8 |       1 |        16 |         4 |        1 | t        | t          | t
+   1242 | 1993-09-27 |       20 |        9 |       2 |        19 |         2 |        0 | t        | t          | t
+   1243 | 1993-06-01 |        2 |        1 |       0 |         1 |         0 |        0 | t        | t          | t
+   1243 | 1993-10-01 |        4 |        0 |       0 |         2 |         0 |        0 | t        | t          | t
+   1243 | 1994-03-06 |        3 |       28 |       0 |         1 |         0 |       20 | f        | f          | t
+   1244 | 1993-06-01 |        1 |        0 |       0 |         0 |         1 |        0 | f        | t          | f
+   1245 | 1993-08-01 |        1 |        0 |       0 |         0 |         0 |        0 | t        |            | t
+   1245 | 1994-03-01 |        0 |        0 |       0 |         0 |         0 |       21 | f        | f          | f
+   1245 | 1994-03-02 |        1 |       31 |       0 |         0 |        21 |        0 | f        | t          | t
+   1245 | 1994-03-03 |        7 |        0 |       0 |         1 |         0 |       16 | f        | f          | f
+   1245 | 1994-03-04 |        1 |        0 |       0 |         0 |        21 |        0 | f        | t          | f
+   1245 | 1994-03-05 |        3 |        0 |       0 |         0 |         1 |        0 | f        | t          | f
+   1245 | 1994-03-10 |       31 |        0 |       0 |        21 |         0 |        0 | t        | t          | t
+   1246 | 1998-10-10 |       32 |        0 |       0 |        22 |         0 |        0 | t        | t          | t
+   1247 | 1997-11-12 |        4 |       28 |       0 |         6 |        16 |        0 | f        | t          | t
+   1248 | 1995-06-08 |       30 |        2 |       0 |        20 |         2 |        0 | t        | t          | t
+(24 rows)
+
+

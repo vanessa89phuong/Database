@@ -1,0 +1,52 @@
+with
+rollcall as (select legnum,vdate 
+             from votes
+             group by (legnum,vdate)
+             ),
+moneyfor as(select coalesce (cast(sum(co.amt) as int),0) as money_for, v.legnum, v.vdate 
+             from rollcall v
+                  left join affected_by a on v.legnum = a.legnum 
+                  left join corporations c on a.cname = c.cname and a.howafctd = 'Favorably' 
+                  left join contributes co on c.cname = co.cname and co.cdate < v.vdate 
+             group by (v.legnum,v.vdate) 
+             order by v.legnum,v.vdate
+             ),
+moneyagainst as (select distinct coalesce (cast(sum (co.amt) as int),0) as money_against, v.legnum, v.vdate 
+                 from rollcall v
+                      left join affected_by a on v.legnum = a.legnum 
+                      left join corporations c on a.cname = c.cname and a.howafctd = 'Unfavorably' 
+                      left join contributes co on c.cname = co.cname and co.cdate < v.vdate 
+                 group by (v.legnum,v.vdate) 
+                 order by v.legnum,v.vdate)
+select distinct v.legnum,v.vdate,coalesce (mf.money_for,0) as money_for, coalesce (ma.money_against,0) as money_against 
+from rollcall v
+     left join moneyfor mf on v.legnum = mf.legnum and v.vdate = mf.vdate 
+     left join moneyagainst ma on v.legnum = ma.legnum and v.vdate = ma.vdate 
+order by v.legnum,v.vdate;
+  legnum |   vdate    | money_for | money_against 
+--------+------------+-----------+---------------
+   1234 | 1993-10-11 |     29000 |         64000
+   1235 | 1994-03-22 |     20500 |             0
+   1236 | 1994-03-24 |     95200 |             0
+   1237 | 1994-05-02 |     23000 |             0
+   1238 | 1994-05-02 |         0 |         50000
+   1239 | 1994-05-05 |    117000 |         21000
+   1240 | 1994-03-01 |         0 |        154000
+   1240 | 1994-06-07 |         0 |        154000
+   1241 | 1993-06-09 |     34000 |             0
+   1242 | 1993-09-27 |     41600 |        114000
+   1243 | 1993-06-01 |         0 |             0
+   1243 | 1993-10-01 |         0 |             0
+   1243 | 1994-03-06 |         0 |             0
+   1244 | 1993-06-01 |         0 |             0
+   1245 | 1993-08-01 |         0 |             0
+   1245 | 1994-03-01 |         0 |             0
+   1245 | 1994-03-02 |         0 |             0
+   1245 | 1994-03-03 |         0 |             0
+   1245 | 1994-03-04 |         0 |             0
+   1245 | 1994-03-05 |         0 |             0
+   1245 | 1994-03-10 |         0 |             0
+   1246 | 1998-10-10 |   1903300 |             0
+   1247 | 1997-11-12 |     95000 |             0
+   1248 | 1995-06-08 |         0 |         30000
+(24 rows)
